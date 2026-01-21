@@ -12,170 +12,184 @@
             background-color: #f8fafc;
             font-family: 'Noto Sans TC', sans-serif;
             color: #1e293b;
-            margin: 0;
-            padding: 0;
+            margin: 0; padding: 0;
             -webkit-font-smoothing: antialiased;
         }
 
-        .main-card {
+        .main-container {
             max-width: 600px;
             margin: 0 auto;
             background: white;
             min-height: 100vh;
-            box-shadow: 0 0 50px rgba(0,0,0,0.05);
+            padding-bottom: 120px; /* 預留空間給底部懸浮 Bar */
         }
 
-        .sticky-header {
-            position: sticky;
-            top: 0;
-            background: white;
-            z-index: 50;
-            border-bottom: 1px solid #f1f5f9;
-            padding: 20px 16px;
-        }
-
+        /* 商品卡片：下拉式效果 */
         .product-card {
-            background: white;
             border: 1px solid #f1f5f9;
-            border-radius: 16px;
-            padding: 16px;
-            margin-bottom: 16px;
+            border-radius: 20px;
+            margin-bottom: 12px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        .product-header {
+            padding: 20px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: white;
+        }
+        .product-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+            background: #fcfcfd;
+            padding: 0 20px;
+        }
+        .product-card.open .product-content {
+            max-height: 500px;
+            padding: 10px 20px 20px 20px;
+        }
+        .product-card.open .arrow-icon {
+            transform: rotate(180deg);
         }
 
+        /* 規格選項 */
         .option-chip {
-            padding: 8px 12px;
+            padding: 10px 14px;
             border: 1px solid #e2e8f0;
-            border-radius: 8px;
+            border-radius: 12px;
             font-size: 13px;
             cursor: pointer;
-            transition: all 0.2s;
-            background: #f8fafc;
+            background: white;
+            transition: 0.2s;
         }
-
         .option-chip.selected {
             background: #1e293b;
             color: white;
             border-color: #1e293b;
         }
 
-        .cart-item {
-            background: #f8fafc;
-            border-radius: 12px;
-            padding: 12px;
-            margin-bottom: 8px;
+        /* 底部懸浮結帳 Bar */
+        .floating-bar {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: calc(100% - 40px);
+            max-width: 500px;
+            background: #0f172a;
+            color: white;
+            border-radius: 30px;
+            padding: 12px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            z-index: 100;
         }
 
-        .btn-primary {
-            background: #1e293b;
-            color: white;
-            width: 100%;
-            padding: 16px;
-            border-radius: 12px;
-            font-weight: 900;
-            transition: opacity 0.2s;
-        }
-
-        .btn-add {
-            background: #6366f1;
-            color: white;
-            padding: 10px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 700;
-            text-align: center;
-            width: 100%;
-            margin-top: 12px;
-        }
-
-        .form-input {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #e2e8f0;
-            border-radius: 10px;
-            margin-bottom: 12px;
-            font-size: 15px;
-        }
-
-        #zoomOverlay {
-            display: none;
+        /* 購物車明細彈窗 */
+        .cart-overlay {
             position: fixed;
             inset: 0;
-            background: rgba(255,255,255,0.98);
-            z-index: 1000;
-            padding: 10px;
-            align-items: center;
-            justify-content: center;
+            background: rgba(0,0,0,0.5);
+            z-index: 150;
+            display: none;
+            align-items: flex-end;
+        }
+        .cart-modal {
+            width: 100%;
+            max-width: 600px;
+            background: white;
+            border-radius: 30px 30px 0 0;
+            padding: 30px;
+            max-height: 80vh;
+            overflow-y: auto;
+            margin: 0 auto;
+        }
+
+        .input-style {
+            width: 100%; padding: 14px; background: #f1f5f9; border-radius: 14px; border: 1px solid transparent; margin-bottom: 12px;
         }
     </style>
 </head>
 <body>
 
-<div class="main-card">
+<div class="main-container">
     <!-- Header -->
-    <div class="sticky-header text-center">
-        <h1 class="text-xl font-black tracking-tighter">BackNumber 3rd Pre-order</h1>
-        <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-1">Lottie Fansite Management</p>
+    <div class="py-10 text-center">
+        <h1 class="text-3xl font-black italic tracking-tighter">BackNumber 3rd</h1>
+        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-[0.4em] mt-2">Lottie Fansite Management</p>
     </div>
 
-    <div class="p-4">
-        <!-- 須知區塊 -->
-        <div class="bg-slate-50 rounded-2xl p-4 mb-8 text-[13px] leading-relaxed text-slate-600">
-            <p>✅ 預購至 2/1 20:00，六月中出貨。</p>
-            <p>✅ 先匯款後填單，確認後不退換。</p>
-            <p class="mt-2 font-bold text-slate-900">國泰世華 (013) 699510910862</p>
-        </div>
-
-        <!-- 目錄圖片 -->
+    <div class="px-5">
+        <!-- 公告圖片 -->
         <div class="mb-8">
             <img src="https://lh3.googleusercontent.com/d/1exfxBowMw9O9j-7cgZs_sGQPmzCD_H5s" 
-                 class="w-full rounded-2xl cursor-zoom-in border border-slate-100 shadow-sm" 
-                 onclick="openZoom(this.src)">
-            <p class="text-[10px] text-center text-slate-400 mt-2">點擊圖片放大目錄</p>
+                 class="w-full rounded-[24px] shadow-sm border border-slate-100" 
+                 onclick="window.open(this.src)">
+        </div>
+
+        <!-- 須知區塊 -->
+        <div class="bg-indigo-50 border border-indigo-100 rounded-[24px] p-6 mb-10 text-[13px] text-indigo-900">
+            <p class="font-bold mb-1 italic tracking-wider">PRE-ORDER INFO</p>
+            <p>• 預購至 2/1 20:00，六月中出貨。</p>
+            <p>• 先匯款後填單，國泰 (013) 699510910862。</p>
         </div>
 
         <!-- 商品清單 -->
-        <h2 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Select Items / 選擇商品</h2>
+        <h2 class="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-4 ml-2">Shop Items / 商品目錄</h2>
         <div id="product-list"></div>
 
-        <!-- 購物車區塊 -->
-        <div id="cart-section" class="hidden mt-10">
-            <h2 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Your Cart / 已選購清單</h2>
-            <div id="cart-items" class="mb-4"></div>
-            <div class="flex justify-between items-end p-4 bg-slate-900 text-white rounded-2xl mb-8">
-                <span class="text-xs font-bold opacity-60">Total Amount</span>
-                <span class="text-3xl font-black italic">$<span id="totalDisplay">0</span></span>
-            </div>
-        </div>
-
-        <!-- 結帳資訊 -->
-        <div id="checkout-section" class="hidden mt-10 pb-20">
-            <h2 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-6">Checkout Info / 寄送資訊</h2>
-            <form id="orderForm">
+        <!-- 結帳表單 (隱藏，直到按下懸浮 Bar 的結帳) -->
+        <div id="checkout-section" class="mt-20 pt-10 border-t border-slate-100 mb-20">
+            <h2 class="text-center font-black text-xl mb-8">收件資訊 Checkout</h2>
+            <form id="orderForm" onsubmit="handleFinalSubmit(event)">
                 <div class="grid grid-cols-2 gap-3">
-                    <input type="text" placeholder="對帳姓名" class="form-input" required>
-                    <input type="text" placeholder="LINE社群名稱" class="form-input" required>
+                    <input type="text" id="form-name" placeholder="對帳姓名" class="input-style" required>
+                    <input type="text" id="form-line" placeholder="LINE社群名稱" class="input-style" required>
                 </div>
-                <div class="grid grid-cols-2 gap-3">
-                    <input type="text" placeholder="Instagram ID" class="form-input" required>
-                    <input type="tel" placeholder="手機號碼" class="form-input" required>
-                </div>
-                <input type="email" placeholder="Email (接收通知)" class="form-input" required>
-                <input type="text" placeholder="7-11 店家名稱" class="form-input" required>
-                <textarea placeholder="備註 (非必填)" class="form-input h-24 pt-3"></textarea>
-
-                <button type="button" onclick="submitForm()" class="btn-primary mt-4 shadow-xl shadow-indigo-100">
-                    CONFIRM & SUBMIT
+                <input type="text" id="form-store" placeholder="7-11 取貨門市名稱" class="input-style" required>
+                <textarea id="form-note" placeholder="備註內容" class="input-style h-24 pt-4"></textarea>
+                <p class="text-[10px] text-slate-400 text-center mb-6 px-4">提交前請確認金額是否正確</p>
+                <button type="submit" class="w-full bg-indigo-600 text-white p-5 rounded-2xl font-black text-lg">
+                    確認並提交訂單
                 </button>
             </form>
         </div>
     </div>
 </div>
 
-<!-- Zoom Overlay -->
-<div id="zoomOverlay" onclick="this.style.display='none'"><img id="zoomedImage" src=""></div>
+<!-- 底部懸浮 Bar -->
+<div id="floating-bar" class="floating-bar hidden">
+    <div class="flex items-center gap-3 cursor-pointer" onclick="openCartModal()">
+        <div class="bg-indigo-500 w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black" id="bar-count">0</div>
+        <div class="text-sm font-bold opacity-80 underline underline-offset-4">查看明細</div>
+    </div>
+    <div class="flex items-center gap-5">
+        <div class="text-right">
+            <p class="text-[9px] opacity-40 uppercase font-bold tracking-tighter">Total Amount</p>
+            <p class="text-xl font-black italic">$<span id="bar-total">0</span></p>
+        </div>
+        <button onclick="scrollToCheckout()" class="bg-white text-slate-900 px-6 py-2.5 rounded-full font-black text-sm active:scale-95 transition-all">
+            結帳
+        </button>
+    </div>
+</div>
+
+<!-- 購物車明細彈窗 -->
+<div id="cart-overlay" class="cart-overlay" onclick="closeCartModal(event)">
+    <div class="cart-modal" onclick="event.stopPropagation()">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-xl font-black">選購明細</h3>
+            <button onclick="closeCartModal(null)" class="text-slate-300">✕</button>
+        </div>
+        <div id="cart-items-container" class="space-y-4 mb-8"></div>
+        <button onclick="closeCartModal(null)" class="w-full bg-slate-100 py-4 rounded-2xl font-bold text-slate-500">繼續購物</button>
+    </div>
+</div>
 
 <script>
     const products = [
@@ -184,131 +198,127 @@
         { id: 'p3', name: 'Logo T-shirt (A款)', price: 1200, colors: ['White', 'Black'], sizes: ['S', 'M', 'L', 'XL'] },
         { id: 'p4', name: 'Photo T-shirt (B款)', price: 1350, colors: ['White'], sizes: ['S', 'M', 'L', 'XL'] },
         { id: 'p5', name: 'Canvas Tote Bag', price: 650, colors: ['Natural', 'Black'], sizes: null },
-        { id: 'p6', name: 'Acrylic Keyring', price: 380, colors: null, sizes: null },
-        { id: 'p7', name: 'Random Photo Card', price: 230, colors: null, sizes: null },
-        { id: 'p8', name: 'Sticker Set', price: 250, colors: null, sizes: null }
+        { id: 'p6', name: 'Acrylic Keyring', price: 380, colors: null, sizes: null }
     ];
 
     let cart = [];
+    let activeSelections = {};
 
-    function initProducts() {
+    function init() {
         const list = document.getElementById('product-list');
         products.forEach(p => {
-            const card = document.createElement('div');
-            card.className = 'product-card';
+            const el = document.createElement('div');
+            el.className = 'product-card';
+            el.id = `card-${p.id}`;
             
-            let optionsHtml = '';
+            let opts = '';
             if(p.colors) {
-                optionsHtml += `<div class="mb-3"><p class="text-[10px] font-bold text-slate-400 mb-2 uppercase">Color</p><div class="flex flex-wrap gap-2">${p.colors.map(c => `<div class="option-chip" data-type="color" data-val="${c}" onclick="selectOption(this)">${c}</div>`).join('')}</div></div>`;
+                opts += `<div class="mb-4"><p class="text-[10px] font-bold text-slate-400 mb-2">COLOR</p><div class="flex flex-wrap gap-2">${p.colors.map(c => `<div class="option-chip" onclick="selectOpt(this,'${p.id}','color','${c}')">${c}</div>`).join('')}</div></div>`;
             }
             if(p.sizes) {
-                optionsHtml += `<div class="mb-3"><p class="text-[10px] font-bold text-slate-400 mb-2 uppercase">Size</p><div class="flex flex-wrap gap-2">${p.sizes.map(s => `<div class="option-chip" data-type="size" data-val="${s}" onclick="selectOption(this)">${s}</div>`).join('')}</div></div>`;
+                opts += `<div class="mb-4"><p class="text-[10px] font-bold text-slate-400 mb-2">SIZE</p><div class="flex flex-wrap gap-2">${p.sizes.map(s => `<div class="option-chip" onclick="selectOpt(this,'${p.id}','size','${s}')">${s}</div>`).join('')}</div></div>`;
             }
 
-            card.innerHTML = `
-                <div class="flex justify-between items-start mb-4">
+            el.innerHTML = `
+                <div class="product-header" onclick="toggleProduct('${p.id}')">
                     <div>
-                        <h3 class="font-black text-slate-800">${p.name}</h3>
-                        <p class="text-indigo-500 font-bold text-sm">$${p.price.toLocaleString()}</p>
+                        <h3 class="font-bold text-slate-800">${p.name}</h3>
+                        <p class="text-indigo-600 font-black italic">$${p.price.toLocaleString()}</p>
+                    </div>
+                    <span class="arrow-icon text-slate-300 transition-transform">▼</span>
+                </div>
+                <div class="product-content">
+                    <div class="pt-2 border-t border-slate-50">
+                        ${opts}
+                        <button onclick="addToCart('${p.id}')" class="w-full bg-slate-900 text-white py-4 rounded-xl font-bold mt-4">加入購物車</button>
                     </div>
                 </div>
-                ${optionsHtml}
-                <button onclick="addToCart('${p.id}')" class="btn-add transition-all active:scale-95">加入購物車 ADD TO CART</button>
             `;
-            list.appendChild(card);
+            list.appendChild(el);
         });
     }
 
-    function selectOption(el) {
-        const parent = el.parentElement;
-        parent.querySelectorAll('.option-chip').forEach(c => c.classList.remove('selected'));
+    function toggleProduct(id) {
+        const el = document.getElementById(`card-${id}`);
+        const isOpen = el.classList.contains('open');
+        document.querySelectorAll('.product-card').forEach(c => c.classList.remove('open'));
+        if(!isOpen) el.classList.add('open');
+    }
+
+    function selectOpt(el, pid, type, val) {
+        if(!activeSelections[pid]) activeSelections[pid] = {};
+        activeSelections[pid][type] = val;
+        el.parentElement.querySelectorAll('.option-chip').forEach(c => c.classList.remove('selected'));
         el.classList.add('selected');
     }
 
-    function addToCart(productId) {
-        const product = products.find(p => p.id === productId);
-        const card = event.target.closest('.product-card');
-        
-        let color = null;
-        let size = null;
+    function addToCart(pid) {
+        const p = products.find(x => x.id === pid);
+        const sel = activeSelections[pid] || {};
+        if(p.colors && !sel.color) return alert('請選擇顏色');
+        if(p.sizes && !sel.size) return alert('請選擇尺寸');
 
-        if(product.colors) {
-            const selected = card.querySelector('[data-type="color"].selected');
-            if(!selected) return alert('請選擇顏色！');
-            color = selected.dataset.val;
-        }
-        if(product.sizes) {
-            const selected = card.querySelector('[data-type="size"].selected');
-            if(!selected) return alert('請選擇尺寸！');
-            size = selected.dataset.val;
-        }
-
-        // 加入購物車，支援重複品項
-        cart.push({
-            ...product,
-            selectedColor: color,
-            selectedSize: size,
-            cartId: Date.now() + Math.random()
-        });
-
-        renderCart();
+        cart.push({ ...p, selColor: sel.color || '', selSize: sel.size || '', uid: Date.now() });
+        updateUI();
+        toggleProduct(pid); // 加入後收起
     }
 
-    function renderCart() {
-        const container = document.getElementById('cart-items');
-        const cartSection = document.getElementById('cart-section');
-        const checkoutSection = document.getElementById('checkout-section');
+    function updateUI() {
+        const bar = document.getElementById('floating-bar');
+        const count = document.getElementById('bar-count');
+        const total = document.getElementById('bar-total');
         
-        container.innerHTML = '';
-        
-        if(cart.length > 0) {
-            cartSection.classList.remove('hidden');
-            checkoutSection.classList.remove('hidden');
-        } else {
-            cartSection.classList.add('hidden');
-            checkoutSection.classList.add('hidden');
-        }
+        if(cart.length > 0) bar.classList.remove('hidden');
+        else bar.classList.add('hidden');
 
-        let total = 0;
-        cart.forEach((item, index) => {
-            total += item.price;
-            const div = document.createElement('div');
-            div.className = 'cart-item';
-            div.innerHTML = `
+        count.innerText = cart.length;
+        let sum = cart.reduce((s, i) => s + i.price, 0);
+        total.innerText = sum.toLocaleString();
+        
+        // 更新彈窗內的清單
+        const container = document.getElementById('cart-items-container');
+        container.innerHTML = cart.map((item, idx) => `
+            <div class="flex justify-between items-center border-b border-slate-50 pb-4">
                 <div>
-                    <p class="font-bold text-sm text-slate-800">${item.name}</p>
-                    <p class="text-[10px] text-slate-400 font-bold">
-                        ${item.selectedColor ? item.selectedColor : ''} 
-                        ${item.selectedSize ? '/ ' + item.selectedSize : ''}
-                    </p>
+                    <p class="font-bold text-sm">${item.name}</p>
+                    <p class="text-[10px] text-slate-400">${item.selColor} ${item.selSize}</p>
                 </div>
                 <div class="flex items-center gap-4">
-                    <span class="font-bold text-sm">$${item.price}</span>
-                    <button onclick="removeFromCart(${index})" class="text-red-400 text-lg">✕</button>
+                    <span class="font-black">$${item.price}</span>
+                    <button onclick="removeItem(${idx})" class="text-slate-300">✕</button>
                 </div>
-            `;
-            container.appendChild(div);
-        });
-
-        document.getElementById('totalDisplay').innerText = total.toLocaleString();
+            </div>
+        `).join('');
     }
 
-    function removeFromCart(index) {
-        cart.splice(index, 1);
-        renderCart();
+    function removeItem(idx) {
+        cart.splice(idx, 1);
+        updateUI();
+        if(cart.length === 0) closeCartModal();
     }
 
-    function openZoom(src) {
-        const overlay = document.getElementById('zoomOverlay');
-        document.getElementById('zoomedImage').src = src;
-        overlay.style.display = 'flex';
+    function openCartModal() {
+        document.getElementById('cart-overlay').style.display = 'flex';
     }
 
-    function submitForm() {
-        alert("✅ 訂單已模擬提交！\n感謝您的預購。");
+    function closeCartModal(e) {
+        document.getElementById('cart-overlay').style.display = 'none';
     }
 
-    window.onload = initProducts;
+    function scrollToCheckout() {
+        closeCartModal();
+        document.getElementById('checkout-section').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function handleFinalSubmit(e) {
+        e.preventDefault();
+        alert('訂單已提交！請記得截圖並確認匯款。');
+        cart = [];
+        updateUI();
+        e.target.reset();
+    }
+
+    window.onload = init;
 </script>
 </body>
 </html>
