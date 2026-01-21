@@ -4,134 +4,156 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BackNumber 3rd Pre-order</title>
-    <!-- Tailwind CSS 網格系統 -->
+    <!-- 引入 Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Firebase SDK (不需安裝，直接從 CDN 引用) -->
+    <!-- 引入 Firebase SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
         import { getFirestore, collection, addDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
 
-        // Firebase 配置 (會自動由環境注入或使用預設)
+        // Firebase 配置
         const firebaseConfig = JSON.parse(__firebase_config);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'backnumber-preorder';
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'backnumber-order-system';
         
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // 初始化狀態
-        window.cart = [];
-        window.selections = {};
-        window.currentUser = null;
+        // 全域狀態管理
+        window.state = {
+            cart: [],
+            selections: {},
+            currentUser: null,
+            isAdmin: false
+        };
 
-        // 商品清單 (你可以隨時修改這裡的價格和選項)
+        // 商品資料
         const products = [
-            { id: 'p1', name: 'Oversized Sweatshirt', price: 1850, colors: ['Black', 'Grey', 'Green'], sizes: ['S', 'M', 'L', 'XL'] },
-            { id: 'p2', name: 'Zip-up Hoodie', price: 2100, colors: ['Black', 'Grey'], sizes: ['S', 'M', 'L', 'XL'] },
-            { id: 'p3', name: 'Logo T-shirt (A款)', price: 1200, colors: ['White', 'Black'], sizes: ['S', 'M', 'L', 'XL'] },
-            { id: 'p4', name: 'Photo T-shirt (B款)', price: 1350, colors: ['White'], sizes: ['S', 'M', 'L', 'XL'] },
-            { id: 'p5', name: 'Canvas Tote Bag', price: 650, colors: ['Natural', 'Black'], sizes: null },
-            { id: 'p6', name: 'Acrylic Keyring', price: 380, colors: null, sizes: null },
-            { id: 'p7', name: 'Sticker Set', price: 250, colors: null, sizes: null }
+            { id: 'p1', name: 'Oversized Sweatshirt', price: 1850, colors: ['黑色 Black', '灰色 Grey', '綠色 Green'], sizes: ['S', 'M', 'L', 'XL'] },
+            { id: 'p2', name: 'Zip-up Hoodie', price: 2100, colors: ['黑色 Black', '灰色 Grey'], sizes: ['S', 'M', 'L', 'XL'] },
+            { id: 'p3', name: 'Logo T-shirt (A款)', price: 1200, colors: ['白色 White', '黑色 Black'], sizes: ['S', 'M', 'L', 'XL'] },
+            { id: 'p4', name: 'Photo T-shirt (B款)', price: 1350, colors: ['白色 White'], sizes: ['S', 'M', 'L', 'XL'] },
+            { id: 'p5', name: 'Canvas Tote Bag', price: 650, colors: ['原色 Natural', '黑色 Black'], sizes: null },
+            { id: 'p6', name: 'Acrylic Keyring', price: 380, colors: null, sizes: null }
         ];
 
         // 登入驗證
         signInAnonymously(auth).then(() => {
-            onAuthStateChanged(auth, (user) => { window.currentUser = user; });
+            onAuthStateChanged(auth, (user) => { window.state.currentUser = user; });
         });
 
-        // 渲染畫面
-        window.render = () => {
-            const list = document.getElementById('product-list');
-            list.innerHTML = products.map(p => `
-                <div class="bg-white p-6 border border-slate-100 rounded-3xl mb-6 shadow-sm">
+        // 渲染商品列表
+        window.renderProducts = () => {
+            const container = document.getElementById('product-list');
+            container.innerHTML = products.map(p => `
+                <div class="bg-white p-6 rounded-3xl border border-slate-100 mb-6 shadow-sm">
                     <div class="flex justify-between items-start mb-4">
-                        <h3 class="text-lg font-black text-slate-800">${p.name}</h3>
+                        <h3 class="text-lg font-bold text-slate-800">${p.name}</h3>
                         <span class="text-indigo-600 font-black italic">$${p.price.toLocaleString()}</span>
                     </div>
                     
                     ${p.colors ? `
                         <div class="mb-4">
-                            <p class="text-[10px] font-bold text-slate-400 mb-2 uppercase tracking-widest">Color</p>
+                            <p class="text-[10px] font-bold text-slate-400 mb-2 uppercase tracking-widest">選擇顏色 Color</p>
                             <div class="flex flex-wrap gap-2">
-                                ${p.colors.map(c => `<button onclick="setOpt('${p.id}','color','${c}',this)" class="px-4 py-2 text-xs rounded-xl border border-slate-100 bg-slate-50 text-slate-500 transition-all">${c}</button>`).join('')}
+                                ${p.colors.map(c => `<button onclick="setOption('${p.id}','color','${c}',this)" class="px-4 py-2 text-xs rounded-xl border border-slate-100 bg-slate-50 text-slate-500 hover:bg-slate-100 transition-all">${c}</button>`).join('')}
                             </div>
                         </div>
                     ` : ''}
 
                     ${p.sizes ? `
                         <div class="mb-4">
-                            <p class="text-[10px] font-bold text-slate-400 mb-2 uppercase tracking-widest">Size</p>
+                            <p class="text-[10px] font-bold text-slate-400 mb-2 uppercase tracking-widest">選擇尺寸 Size</p>
                             <div class="flex flex-wrap gap-2">
-                                ${p.sizes.map(s => `<button onclick="setOpt('${p.id}','size','${s}',this)" class="px-4 py-2 text-xs rounded-xl border border-slate-100 bg-slate-50 text-slate-500 transition-all">${s}</button>`).join('')}
+                                ${p.sizes.map(s => `<button onclick="setOption('${p.id}','size','${s}',this)" class="px-4 py-2 text-xs rounded-xl border border-slate-100 bg-slate-50 text-slate-500 hover:bg-slate-100 transition-all">${s}</button>`).join('')}
                             </div>
                         </div>
                     ` : ''}
 
-                    <button onclick="add('${p.id}')" class="w-full bg-slate-900 text-white py-4 rounded-2xl font-black text-sm active:scale-95 transition-all shadow-lg shadow-slate-200">
-                        加入購物車 ADD TO CART
+                    <button onclick="addToCart('${p.id}')" class="w-full bg-slate-900 text-white py-4 rounded-2xl font-bold text-sm active:scale-95 transition-all shadow-lg shadow-slate-100">
+                        加入購物車
                     </button>
                 </div>
             `).join('');
         };
 
-        window.setOpt = (pid, type, val, btn) => {
-            if(!window.selections[pid]) window.selections[pid] = {};
-            window.selections[pid][type] = val;
-            btn.parentElement.querySelectorAll('button').forEach(b => b.classList.remove('bg-slate-900', 'text-white', 'border-slate-900'));
+        // 處理規格選擇
+        window.setOption = (pid, type, val, btn) => {
+            if(!window.state.selections[pid]) window.state.selections[pid] = {};
+            window.state.selections[pid][type] = val;
+            
+            // UI 反饋
+            const buttons = btn.parentElement.querySelectorAll('button');
+            buttons.forEach(b => {
+                b.classList.remove('bg-slate-900', 'text-white', 'border-slate-900');
+                b.classList.add('bg-slate-50', 'text-slate-500', 'border-slate-100');
+            });
             btn.classList.add('bg-slate-900', 'text-white', 'border-slate-900');
+            btn.classList.remove('bg-slate-50', 'text-slate-500', 'border-slate-100');
         };
 
-        window.add = (pid) => {
-            const p = products.find(x => x.id === pid);
-            const sel = window.selections[pid] || {};
-            if(p.colors && !sel.color) return alert('請先選擇顏色');
-            if(p.sizes && !sel.size) return alert('請先選擇尺寸');
+        // 加入購物車功能
+        window.addToCart = (pid) => {
+            const product = products.find(p => p.id === pid);
+            const sel = window.state.selections[pid] || {};
+            
+            if(product.colors && !sel.color) return alert('請先選擇顏色');
+            if(product.sizes && !sel.size) return alert('請先選擇尺寸');
 
-            window.cart.push({ ...p, selColor: sel.color, selSize: sel.size, cartId: Date.now() + Math.random() });
+            const cartItem = {
+                ...product,
+                selectedColor: sel.color || '',
+                selectedSize: sel.size || '',
+                uniqueId: Date.now() + Math.random()
+            };
+
+            window.state.cart.push(cartItem);
             window.updateUI();
         };
 
+        // 更新購物車 UI
         window.updateUI = () => {
             const drawer = document.getElementById('drawer');
-            const itemsCont = document.getElementById('cart-items');
-            const totalDisplay = document.getElementById('total');
-            const countBadge = document.getElementById('count');
-            const form = document.getElementById('checkout-form');
+            const cartList = document.getElementById('cart-items');
+            const totalVal = document.getElementById('total-value');
+            const badge = document.getElementById('cart-badge');
+            const checkoutForm = document.getElementById('checkout-form');
 
-            if(window.cart.length > 0) {
+            if(window.state.cart.length > 0) {
                 drawer.classList.remove('hidden');
-                form.classList.remove('hidden');
+                checkoutForm.classList.remove('hidden');
             } else {
                 drawer.classList.add('hidden');
-                form.classList.add('hidden');
+                checkoutForm.classList.add('hidden');
                 drawer.classList.add('max-h-[70px]');
                 drawer.classList.remove('max-h-[80vh]');
             }
 
-            countBadge.innerText = window.cart.length;
+            badge.innerText = window.state.cart.length;
             let total = 0;
-            itemsCont.innerHTML = window.cart.map((item, i) => {
+            cartList.innerHTML = window.state.cart.map((item, index) => {
                 total += item.price;
                 return `
-                    <div class="flex justify-between items-center py-4 border-b border-white/5">
+                    <div class="flex justify-between items-center py-4 border-b border-white/10">
                         <div>
                             <p class="font-bold text-sm">${item.name}</p>
-                            <p class="text-[10px] text-white/40 font-bold uppercase">${item.selColor || ''} ${item.selSize ? '/ '+item.selSize : ''}</p>
+                            <p class="text-[10px] text-white/40 font-bold uppercase tracking-wider">
+                                ${item.selectedColor} ${item.selectedSize ? '/ ' + item.selectedSize : ''}
+                            </p>
                         </div>
                         <div class="flex items-center gap-4">
-                            <span class="font-black italic text-sm">$${item.price}</span>
-                            <button onclick="remove(${i})" class="text-white/20 hover:text-white">✕</button>
+                            <span class="font-black italic text-sm">$${item.price.toLocaleString()}</span>
+                            <button onclick="removeFromCart(${index})" class="text-white/20 hover:text-white">✕</button>
                         </div>
                     </div>
                 `;
             }).join('');
-            totalDisplay.innerText = total.toLocaleString();
+            totalVal.innerText = total.toLocaleString();
         };
 
-        window.remove = (i) => {
-            window.cart.splice(i, 1);
+        window.removeFromCart = (index) => {
+            window.state.cart.splice(index, 1);
             window.updateUI();
         };
 
@@ -141,57 +163,71 @@
             drawer.classList.toggle('max-h-[80vh]');
         };
 
-        window.submit = async (e) => {
+        // 提交訂單
+        window.submitOrder = async (e) => {
             e.preventDefault();
-            if(!window.currentUser) return alert('初始化中');
+            if(!window.state.currentUser) return alert('系統初始化中，請稍候');
+            
             const btn = e.target.querySelector('button');
             btn.disabled = true;
-            btn.innerText = '處理中...';
+            btn.innerText = '正在上傳訂單...';
 
-            const payload = {
+            const orderData = {
                 customer: {
-                    name: document.getElementById('n').value,
-                    line: document.getElementById('l').value,
-                    phone: document.getElementById('p').value,
-                    ig: document.getElementById('i').value,
-                    store: document.getElementById('s').value,
-                    note: document.getElementById('m').value
+                    name: document.getElementById('name').value,
+                    line: document.getElementById('line').value,
+                    phone: document.getElementById('phone').value,
+                    ig: document.getElementById('ig').value,
+                    store: document.getElementById('store').value,
+                    note: document.getElementById('note').value
                 },
-                items: window.cart,
-                total: window.cart.reduce((s,i) => s+i.price, 0),
-                time: new Date().toLocaleString()
+                items: window.state.cart,
+                total: window.state.cart.reduce((sum, item) => sum + item.price, 0),
+                createdAt: new Date().toLocaleString(),
+                timestamp: new Date().getTime()
             };
 
             try {
-                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'orders'), payload);
-                alert('訂單已提交！');
-                window.cart = [];
+                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'orders'), orderData);
+                alert('🎉 訂單提交成功！請截圖並記得匯款通知。');
+                window.state.cart = [];
                 window.updateUI();
                 e.target.reset();
-            } catch(err) {
-                alert('失敗');
+            } catch (err) {
+                alert('提交失敗，請檢查網路連線');
             } finally {
                 btn.disabled = false;
-                btn.innerText = '確認提交訂單';
+                btn.innerText = '提交訂購單';
             }
         };
 
+        // 管理員後台功能
         window.openAdmin = () => {
-            const p = prompt('密碼');
-            if(p === '1234') {
-                document.getElementById('main-view').classList.add('hidden');
-                document.getElementById('admin-view').classList.remove('hidden');
+            const pass = prompt('請輸入管理密碼');
+            if(pass === '1234') {
+                document.getElementById('user-section').classList.add('hidden');
+                document.getElementById('admin-section').classList.remove('hidden');
+                
                 const q = collection(db, 'artifacts', appId, 'public', 'data', 'orders');
-                onSnapshot(q, (snap) => {
-                    document.getElementById('orders-list').innerHTML = snap.docs.map(doc => {
+                onSnapshot(q, (snapshot) => {
+                    const adminList = document.getElementById('admin-order-list');
+                    adminList.innerHTML = snapshot.docs.map(doc => {
                         const d = doc.data();
                         return `
-                            <div class="bg-white p-4 rounded-2xl mb-4 border border-slate-100 shadow-sm">
-                                <div class="flex justify-between font-black mb-1"><span>${d.customer.name}</span><span class="text-indigo-600">$${d.total}</span></div>
-                                <div class="text-[10px] text-slate-400 mb-3">${d.customer.line} | ${d.customer.phone}</div>
-                                <div class="text-[11px] bg-slate-50 p-3 rounded-xl">
-                                    ${d.items.map(i => `• ${i.name} (${i.selColor||''} ${i.selSize||''})`).join('<br>')}
+                            <div class="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm mb-4">
+                                <div class="flex justify-between font-bold text-lg mb-2">
+                                    <span>${d.customer.name}</span>
+                                    <span class="text-indigo-600">$${d.total.toLocaleString()}</span>
                                 </div>
+                                <div class="text-[11px] text-slate-400 mb-3 space-y-1">
+                                    <p>LINE: ${d.customer.line} | IG: ${d.customer.ig}</p>
+                                    <p>電話: ${d.customer.phone} | 店家: ${d.customer.store}</p>
+                                    <p>時間: ${d.createdAt}</p>
+                                </div>
+                                <div class="bg-slate-50 p-3 rounded-2xl text-[11px] text-slate-600 space-y-1">
+                                    ${d.items.map(i => `• ${i.name} (${i.selectedColor} ${i.selectedSize})`).join('<br>')}
+                                </div>
+                                ${d.customer.note ? `<p class="mt-2 text-[11px] text-slate-400 italic">備註: ${d.customer.note}</p>` : ''}
                             </div>
                         `;
                     }).join('');
@@ -199,65 +235,87 @@
             }
         };
 
-        window.onload = window.render;
+        window.onload = window.renderProducts;
     </script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap');
-        body { font-family: 'Noto Sans TC', sans-serif; -webkit-tap-highlight-color: transparent; }
-        .input-field { width: 100%; padding: 14px; border: 1px solid #f1f5f9; border-radius: 16px; background: #f8fafc; font-size: 14px; margin-bottom: 12px; }
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #fbfbfb; -webkit-tap-highlight-color: transparent; }
+        .input-style { width: 100%; padding: 15px; background: #f3f4f6; border-radius: 18px; font-size: 14px; margin-bottom: 12px; border: 1px solid transparent; transition: all 0.2s; }
+        .input-style:focus { background: white; border-color: #6366f1; outline: none; box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1); }
     </style>
 </head>
-<body class="bg-[#fafafa]">
+<body class="pb-32">
 
-    <div id="main-view" class="max-w-[500px] mx-auto pb-32 px-4">
+    <!-- 用戶購物介面 -->
+    <div id="user-section" class="max-w-[500px] mx-auto px-5">
         <header class="py-12 text-center" onclick="openAdmin()">
-            <h1 class="text-3xl font-black tracking-tighter italic">BackNumber 3rd</h1>
-            <p class="text-[9px] text-slate-300 font-bold uppercase tracking-[0.5em] mt-2">Fansite Pre-order</p>
+            <h1 class="text-3xl font-black italic tracking-tighter">BackNumber 3rd</h1>
+            <p class="text-[10px] text-slate-300 font-bold uppercase tracking-[0.5em] mt-2">Fansite Management</p>
         </header>
 
+        <!-- 購物說明 -->
+        <div class="bg-indigo-600 text-white p-6 rounded-[32px] mb-8 shadow-xl shadow-indigo-100">
+            <h4 class="font-bold text-sm mb-2 italic tracking-wider">PRE-ORDER NOTICE</h4>
+            <div class="text-[12px] opacity-90 leading-relaxed space-y-1">
+                <p>• 點擊商品規格後按下「加入購物車」。</p>
+                <p>• 可在下方展開明細確認目前選購總額。</p>
+                <p>• 匯款帳號：國泰世華 (013) 699510910862</p>
+            </div>
+        </div>
+
+        <!-- 商品清單 -->
         <div id="product-list"></div>
 
+        <!-- 結帳表單 -->
         <div id="checkout-form" class="hidden mt-12 pt-12 border-t border-slate-100">
-            <h2 class="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-8">Shipping Info / 寄送資訊</h2>
-            <form onsubmit="submit(event)">
+            <h2 class="text-xs font-black text-slate-400 uppercase tracking-[0.3em] mb-8 text-center">寄送資訊 / Checkout Info</h2>
+            <form onsubmit="submitOrder(event)">
                 <div class="grid grid-cols-2 gap-3">
-                    <input type="text" id="n" placeholder="對帳姓名" class="input-field" required>
-                    <input type="text" id="l" placeholder="LINE社群名稱" class="input-field" required>
+                    <input type="text" id="name" placeholder="對帳姓名" class="input-style" required>
+                    <input type="text" id="line" placeholder="LINE社群名稱" class="input-style" required>
                 </div>
                 <div class="grid grid-cols-2 gap-3">
-                    <input type="text" id="i" placeholder="Instagram ID" class="input-field" required>
-                    <input type="tel" id="p" placeholder="手機號碼" class="input-field" required>
+                    <input type="text" id="ig" placeholder="Instagram ID" class="input-style" required>
+                    <input type="tel" id="phone" placeholder="手機號碼" class="input-style" required>
                 </div>
-                <input type="text" id="s" placeholder="7-11 店家名稱" class="input-field" required>
-                <textarea id="m" placeholder="備註 (選填)" class="input-field h-28"></textarea>
-                <button type="submit" class="w-full bg-indigo-600 text-white p-5 rounded-2xl font-black shadow-xl shadow-indigo-100 mt-4">確認提交訂單</button>
+                <input type="text" id="store" placeholder="7-11 取貨店家名稱" class="input-style" required>
+                <textarea id="note" placeholder="備註或特殊要求 (選填)" class="input-style h-28 pt-4"></textarea>
+                <button type="submit" class="w-full bg-indigo-600 text-white p-5 rounded-2xl font-black shadow-xl shadow-indigo-100 mt-4 active:scale-95 transition-all">
+                    提交訂購單
+                </button>
             </form>
         </div>
     </div>
 
-    <div id="admin-view" class="hidden max-w-[500px] mx-auto p-6">
+    <!-- 管理員後台介面 -->
+    <div id="admin-section" class="hidden max-w-[500px] mx-auto p-6">
         <div class="flex justify-between items-center mb-8">
-            <h2 class="text-2xl font-black">訂單管理</h2>
-            <button onclick="location.reload()" class="text-xs text-slate-400">登出</button>
+            <h2 class="text-2xl font-black">表單回收結果</h2>
+            <button onclick="location.reload()" class="text-xs text-slate-400 underline">登出後台</button>
         </div>
-        <div id="orders-list"></div>
+        <div id="admin-order-list"></div>
     </div>
 
-    <!-- 可摺疊購物籃 -->
-    <div id="drawer" class="hidden fixed bottom-4 left-4 right-4 max-w-[468px] mx-auto bg-slate-900 text-white rounded-[32px] shadow-2xl z-50 transition-all duration-500 overflow-hidden max-h-[70px]">
+    <!-- 摺疊式底部明細 -->
+    <div id="drawer" class="hidden fixed bottom-6 left-5 right-5 max-w-[460px] mx-auto bg-slate-900 text-white rounded-[32px] shadow-2xl z-50 transition-all duration-500 overflow-hidden max-h-[70px]">
+        <!-- 標題列 (縮小時顯示) -->
         <div class="h-[70px] flex justify-between items-center px-8 cursor-pointer" onclick="toggleDrawer()">
             <div class="flex items-center gap-3">
-                <span id="count" class="bg-indigo-500 text-white text-[10px] font-black px-2.5 py-1 rounded-full">0</span>
-                <span class="text-sm font-bold">查看明細</span>
+                <span id="cart-badge" class="bg-indigo-500 text-white text-[10px] font-black px-2.5 py-1 rounded-full">0</span>
+                <span class="text-sm font-bold tracking-tight">查看 / 調整選購明細</span>
             </div>
             <div class="flex items-center gap-4">
-                <span class="text-xl font-black italic">$<span id="total">0</span></span>
+                <span class="text-xl font-black italic">$<span id="total-value">0</span></span>
                 <span class="text-[10px] opacity-30">▲</span>
             </div>
         </div>
+        
+        <!-- 展開後的列表 -->
         <div class="px-8 pb-8 overflow-y-auto max-h-[calc(80vh-70px)]">
-            <div id="cart-items"></div>
-            <button onclick="toggleDrawer()" class="w-full bg-white/5 py-4 rounded-2xl mt-6 text-[10px] font-bold uppercase tracking-widest text-white/30">關閉明細</button>
+            <div id="cart-items" class="pt-2"></div>
+            <button onclick="toggleDrawer()" class="w-full bg-white/10 py-4 rounded-2xl mt-6 text-[10px] font-black uppercase tracking-widest text-white/40">
+                收起明細
+            </button>
         </div>
     </div>
 
