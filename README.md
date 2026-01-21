@@ -81,26 +81,30 @@
             <p class="text-xs text-slate-400 font-bold tracking-widest uppercase">Lottie Shop Online</p>
         </div>
 
-        <!-- 須知區塊 -->
+        <!-- 須知區塊 (依照你要求的內容更新) -->
         <div class="px-8 pb-6">
-            <div class="bg-indigo-50 rounded-2xl p-5 mb-8 border border-indigo-100">
-                <h2 class="font-bold text-indigo-900 mb-2">📋 訂購須知</h2>
-                <ul class="text-sm text-indigo-800 space-y-1 opacity-80 leading-relaxed">
-                    <li>• 2/1 20:00 收單</li>
-                    <li>• 費用含國際運費與關稅</li>
-                    <li>• 先匯款後填單</li>
-                </ul>
-                <div class="mt-4 pt-3 border-t border-indigo-200">
-                    <p class="text-[10px] font-bold text-indigo-400 mb-1">匯款資訊</p>
-                    <p class="font-mono text-indigo-900 font-bold">國泰世華 (013) 699510910862</p>
+            <div class="bg-indigo-50 rounded-2xl p-6 mb-8 border border-indigo-100">
+                <h2 class="font-bold text-indigo-900 mb-4 flex items-center">
+                    <span class="mr-2">📝</span> 訂購須知與條款
+                </h2>
+                <div class="text-[13px] text-indigo-800 space-y-3 leading-relaxed">
+                    <p>👉 BackNumber 周邊販售第三波預購，2/1 20:00收單，六月中出貨。</p>
+                    <p>👉 下單前務必確認顏色尺寸，確認訂單後不接受更換或是取消。</p>
+                    <p>✅ 不因任何瑕疵問題退貨，若有缺貨情況發生會透過 <strong>LINE社群</strong> 聯絡，全額退款。</p>
+                    <p>✅ 不二收，匯款後就等出貨。（已包含當地運費、國際運費、關稅、寄送運費）</p>
+                    <p>✅ 先匯款，後填單；填單完成即視為購買，恕不得取消。</p>
+                </div>
+                <div class="mt-5 pt-4 border-t border-indigo-200">
+                    <p class="text-[10px] font-bold text-indigo-400 mb-1 tracking-widest">PAYMENT INFO / 匯款資訊</p>
+                    <p class="font-mono text-indigo-900 font-bold text-lg">國泰世華 (013) 699510910862</p>
                 </div>
             </div>
 
             <!-- 商品展示 -->
             <div class="mb-8">
-                <h2 class="text-xs font-bold text-slate-400 mb-3 uppercase tracking-widest">Product</h2>
-                <div class="product-img-container rounded-2xl border border-slate-100" onclick="showZoom()">
-                    <img id="mainImg" src="https://lh3.googleusercontent.com/d/1exfxBowMw9O9j-7cgZs_sGQPmzCD_H5s" alt="商品目錄" onerror="this.src='https://via.placeholder.com/600x400?text=Image+Loading...'">
+                <h2 class="text-xs font-bold text-slate-400 mb-3 uppercase tracking-widest">Product Catalog / 商品目錄</h2>
+                <div class="product-img-container rounded-2xl border border-slate-100 shadow-sm" onclick="showZoom()">
+                    <img id="mainImg" src="https://lh3.googleusercontent.com/d/1exfxBowMw9O9j-7cgZs_sGQPmzCD_H5s" alt="商品目錄" onerror="handleError(this)">
                 </div>
             </div>
 
@@ -108,15 +112,15 @@
             <div class="mb-8">
                 <div class="flex items-center justify-between p-4 border border-slate-100 rounded-2xl bg-slate-50/50">
                     <div class="flex items-center">
-                        <div class="w-10 h-10 bg-white rounded-lg border border-slate-100 flex items-center justify-center mr-3">📸</div>
+                        <div class="w-10 h-10 bg-white rounded-lg border border-slate-100 flex items-center justify-center mr-3 text-lg">📸</div>
                         <p class="font-bold text-slate-800">女生隨機卡</p>
                     </div>
                     <div class="flex items-center gap-4">
                         <span class="font-bold text-slate-800">$230</span>
                         <div class="flex items-center bg-white border border-slate-200 rounded-lg overflow-hidden">
-                            <button onclick="changeQty(-1)" class="w-8 h-8 flex items-center justify-center hover:bg-slate-50">-</button>
-                            <span id="qty" class="w-8 text-center text-sm font-bold">0</span>
-                            <button onclick="changeQty(1)" class="w-8 h-8 flex items-center justify-center hover:bg-slate-50">+</button>
+                            <button onclick="changeQty(-1)" class="w-8 h-8 flex items-center justify-center hover:bg-slate-50 font-bold transition-colors">-</button>
+                            <span id="qty" class="w-8 text-center text-sm font-black">0</span>
+                            <button onclick="changeQty(1)" class="w-8 h-8 flex items-center justify-center hover:bg-slate-50 font-bold transition-colors">+</button>
                         </div>
                     </div>
                 </div>
@@ -124,25 +128,26 @@
 
             <!-- 填單表格 -->
             <form id="orderForm" class="space-y-4">
+                <h2 class="text-xs font-bold text-slate-400 mb-1 uppercase tracking-widest">Order Info / 填單資訊</h2>
                 <div class="grid grid-cols-2 gap-4">
-                    <input type="text" placeholder="對帳名稱" class="input-field">
-                    <input type="text" placeholder="IG 帳號" class="input-field">
+                    <input type="text" placeholder="對帳名稱" class="input-field" required>
+                    <input type="text" placeholder="IG 帳號 (@)" class="input-field" required>
                 </div>
-                <input type="tel" placeholder="聯絡電話" class="input-field">
-                <input type="text" placeholder="賣貨便店名" class="input-field">
+                <input type="tel" placeholder="聯絡電話" class="input-field" required>
+                <input type="text" placeholder="賣貨便店名 (完整名稱)" class="input-field" required>
 
                 <!-- 總計與提交 -->
-                <div class="mt-10 p-6 bg-indigo-600 rounded-2xl text-center">
-                    <p class="text-indigo-200 text-[10px] font-bold mb-1 uppercase tracking-widest">Total</p>
-                    <div class="text-white text-3xl font-black mb-6">$<span id="total">0</span></div>
-                    <button type="button" onclick="handleSubmit()" class="w-full py-3 bg-white text-indigo-600 rounded-xl font-bold hover:bg-indigo-50 transition-colors">
-                        提交訂單
+                <div class="mt-10 p-8 bg-indigo-600 rounded-[32px] text-center shadow-lg shadow-indigo-100">
+                    <p class="text-indigo-200 text-[10px] font-bold mb-1 uppercase tracking-widest">Grand Total</p>
+                    <div class="text-white text-4xl font-black mb-8 tracking-tighter">$<span id="total">0</span></div>
+                    <button type="button" onclick="handleSubmit()" class="w-full py-4 bg-white text-indigo-600 rounded-2xl font-black tracking-widest hover:bg-indigo-50 transition-all active:scale-95 shadow-md">
+                        提交訂單內容
                     </button>
                 </div>
             </form>
 
             <div class="mt-8 text-center text-[10px] text-slate-400 font-bold leading-relaxed pb-8">
-                IG: lottie_lovetobuy
+                如有任何問題，請私訊 IG <span class="text-slate-600 underline">lottie_lovetobuy</span><br>或至 LINE 社群尋求協助
             </div>
         </div>
     </div>
@@ -154,21 +159,35 @@
 
     <script>
         let qty = 0;
+        const PRICE = 230;
+
         function changeQty(v) {
             qty = Math.max(0, qty + v);
             document.getElementById('qty').innerText = qty;
-            document.getElementById('total').innerText = qty * 230;
+            document.getElementById('total').innerText = (qty * PRICE).toLocaleString();
         }
+
         function showZoom() {
-            document.getElementById('zoomImg').src = document.getElementById('mainImg').src;
+            const src = document.getElementById('mainImg').src;
+            document.getElementById('zoomImg').src = src;
             document.getElementById('imgModal').style.display = 'flex';
         }
+
+        function handleError(img) {
+            img.parentElement.innerHTML = `
+                <div class="p-8 text-center bg-slate-50">
+                    <p class="text-slate-400 text-sm mb-2">圖片載入中或需要權限</p>
+                    <a href="https://drive.google.com/file/d/1exfxBowMw9O9j-7cgZs_sGQPmzCD_H5s/view" target="_blank" class="text-indigo-500 underline text-sm font-bold">直接開啟 Google Drive 圖片</a>
+                </div>
+            `;
+        }
+
         function handleSubmit() {
             if (qty === 0) {
-                alert("請選擇數量");
+                alert("請至少選擇一個商品數量！");
                 return;
             }
-            alert("提交成功（預覽模式）");
+            alert("感謝填寫！此為展示版型，請確認資訊正確後再進行後續匯款與聯繫。");
         }
     </script>
 </body>
